@@ -20,14 +20,28 @@ pipeline:
      - ./build/vue-builds.sh ./settings/js/settings-vue.js
     when:
       matrix:
-        TESTS: vue-builds
+        TESTS: vue-build-settings
   vue-build-updatenotification:
     image: node
     commands:
-     - ./build/vue-builds.sh ./apps/updatenotification/js/merged.js
+     - ./build/vue-builds.sh ./apps/updatenotification/js/updatenotification.js
     when:
       matrix:
-        TESTS: vue-builds
+        TESTS: vue-build-updatenotification
+  vue-build-oauth2:
+    image: node
+    commands:
+     - ./build/vue-builds.sh ./apps/oauth2/js/oauth2.js
+    when:
+      matrix:
+        TESTS: vue-build-oauth2
+  vue-build-accessibility:
+    image: node
+    commands:
+     - ./build/vue-builds.sh ./apps/accessibility/js/accessibility.js
+    when:
+      matrix:
+        TESTS: vue-build-accessibility
   checkers:
     image: nextcloudci/php7.0:php7.0-19
     commands:
@@ -683,7 +697,10 @@ pipeline:
 matrix:
   include:
     - TESTS: checkers
-    - TESTS: vue-builds
+    - TESTS: vue-build-settings
+    - TESTS: vue-build-updatenotification
+    - TESTS: vue-build-oauth2
+    - TESTS: vue-build-accessibility
     - TESTS: nodb-codecov
       ENABLE_REDIS: true
     - TESTS: db-codecov

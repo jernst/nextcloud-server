@@ -75,7 +75,7 @@
 				<!-- hidden input trick for vanilla html5 form validation -->
 				<input type="text" :value="newUser.groups" v-if="!settings.isAdmin"
 					   tabindex="-1" id="newgroups" :required="!settings.isAdmin" />
-				<multiselect :options="groups" v-model="newUser.groups"
+				<multiselect :options="canAddGroups" v-model="newUser.groups"
 							 :placeholder="t('settings', 'Add user in group')"
 							 label="name" track-by="id" class="multiselect-vue"
 							 :multiple="true" :close-on-select="false"
@@ -157,6 +157,7 @@ export default {
 			defaultQuota: defaultQuota,
 			loading: false,
 			scrolled: false,
+			searchQuery: '',
 			newUser: {
 				id:'',
 				displayName:'',
@@ -186,6 +187,11 @@ export default {
 		 * the watch won't be triggered. We need to initialize it.
 		 */
 		this.setNewUserDefaultGroup(this.$route.params.selectedGroup);
+
+		/** 
+		 * Register search
+		 */
+		this.userSearch = new OCA.Search(this.search, this.resetSearch);
 	},
 	computed: {
 		settings() {
@@ -202,7 +208,7 @@ export default {
 				return disabledUsers;
 			}
 			if (!this.settings.isAdmin) {
-				// We don't want subadmins to edit themselves
+				// we don't want subadmins to edit themselves
 				return this.users.filter(user => user.enabled !== false && user.id !== oc_current_user);
 			}
 			return this.users.filter(user => user.enabled !== false);
@@ -213,13 +219,23 @@ export default {
 				.filter(group => group.id !== 'disabled')
 				.sort((a, b) => a.name.localeCompare(b.name));
 		},
+		canAddGroups() {
+			// disabled if no permission to add new users to group
+			return this.groups.map(group => {
+				// clone object because we don't want
+				// to edit the original groups
+				group = Object.assign({}, group);
+				group.$isDisabled = group.canAdd === false;
+				return group;
+			});
+		},
 		subAdminsGroups() {
 			// data provided php side
 			return this.$store.getters.getSubadminGroups;
 		},
 		quotaOptions() {
 			// convert the preset array into objects
-			let quotaPreset = this.settings.quotaPreset.reduce((acc, cur) => acc.concat({id:cur, label:cur}), []);
+			let quotaPreset = this.settings.quotaPreset.reduce((acc, cur) => acc.concat({id: cur, label: cur}), []);
 			// add default presets
 			quotaPreset.unshift(this.unlimitedQuota);
 			quotaPreset.unshift(this.defaultQuota);
@@ -259,7 +275,7 @@ export default {
 	},
 	methods: {
 		onScroll(event) {
-			this.scrolled = event.target.scrollTop>0;
+			this.scrolled = event.target.scrollTo > 0;
 		},
 
 		/**
@@ -284,9 +300,20 @@ export default {
 			this.$store.dispatch('getUsers', {
 				offset: this.usersOffset,
 				limit: this.usersLimit,
-				group: this.selectedGroup !== 'disabled' ? this.selectedGroup : ''
+				group: this.selectedGroup !== 'disabled' ? this.selectedGroup : '',
+				search: this.searchQuery
 			})
 			.then((response) => { response ? $state.loaded() : $state.complete() });
+		},
+
+		/* SEARCH */
+		search(query) {
+			this.searchQuery = query;
+			this.$store.commit('resetUsers');
+			this.$refs.infiniteLoading.$emit('$InfiniteLoading:reset');
+		},
+		resetSearch() {
+			this.search('');
 		},
 
 		resetForm() {

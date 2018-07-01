@@ -39,9 +39,11 @@ const defaults = {
 		id: '',
 		name: '',
 		usercount: 0,
-		disabled: 0
+		disabled: 0,
+		canAdd: true,
+		canRemove: true
 	}
-}
+};
 
 const state = {
 	users: [],
@@ -395,7 +397,7 @@ const actions = {
 	 * @param {string} userid User id 
 	 * @returns {Promise}
 	 */
-	deleteUser(context, { userid }) {
+	deleteUser(context, userid) {
 		return api.requireAdmin().then((response) => {
 			return api.delete(OC.linkToOCS(`cloud/users/${userid}`, 2))
 				.then((response) => context.commit('deleteUser', userid))
@@ -484,6 +486,21 @@ const actions = {
 			}
 		}
 		return Promise.reject(new Error('Invalid request data'));
+	},
+
+	/**
+	 * Send welcome mail
+	 * 
+	 * @param {Object} context
+	 * @param {string} userid User id 
+	 * @returns {Promise}
+	 */
+	sendWelcomeMail(context, userid) {
+		return api.requireAdmin().then((response) => {
+			return api.post(OC.linkToOCS(`cloud/users/${userid}/welcome`, 2))
+				.then(response => true)
+				.catch((error) => {throw error;});
+		}).catch((error) => context.commit('API_FAILURE', { userid, error }));
 	}
 };
 

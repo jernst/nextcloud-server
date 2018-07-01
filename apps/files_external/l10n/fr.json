@@ -68,6 +68,8 @@
     "User entered, store in database" : "Utilisateur entré, stocker dans la base de données",
     "RSA public key" : "Clé publique RSA",
     "Public key" : "Clé publique",
+    "RSA private key" : "Clé privée RSA",
+    "Private key" : "Clé privée",
     "Amazon S3" : "Amazon S3",
     "Bucket" : "Bucket",
     "Hostname" : "Nom de l'hôte",
@@ -100,6 +102,7 @@
     "The FTP support in PHP is not enabled or installed. Mounting of %s is not possible. Please ask your system administrator to install it." : "Le support du FTP dans PHP n'est pas activé ou installé. Le montage de %s n'est pas possible. Merci de demander à votre administrateur de l'installer.",
     "\"%s\" is not installed. Mounting of %s is not possible. Please ask your system administrator to install it." : "\"%s\" n'est pas installé. Le montage de %s n'est pas possible. Merci de demander à l'administrateur système de l'installer.",
     "External storage support" : "Support de stockage externe",
+    "Adds basic external storage support" : "Ajout de la prise en charge basique du stockage externe",
     "No external storage configured or you don't have the permission to configure them" : "Aucun stockage externe configuré ou vous n'avez pas l'autorisation de les configurer",
     "Name" : "Nom",
     "Storage type" : "Type de stockage",
@@ -121,7 +124,6 @@
     "Advanced settings" : "Paramètres avancés",
     "Delete" : "Supprimer",
     "Allow users to mount external storage" : "Autoriser les utilisateurs à monter des espaces de stockage externes",
-    "Allow users to mount the following external storage" : "Autoriser les utilisateurs à monter les stockages externes suivants",
     "Fetching request tokens failed. Verify that your app key and secret are correct." : "L'obtention des jetons de requête a échoué. Vérifiez que votre clé d'application et votre mot de passe sont corrects.",
     "Fetching access tokens failed. Verify that your app key and secret are correct." : "L'obtention des jetons d'accès a échoué. Vérifiez que votre clé d'application et votre mot de passe sont corrects.",
     "Step 1 failed. Exception: %s" : "L’étape 1 a échoué. Exception : %s",
@@ -133,6 +135,7 @@
     "Google Drive" : "Google Drive",
     "No external storage configured" : "Aucun stockage externe configuré",
     "You can add external storages in the personal settings" : "Vous pouvez ajouter des stockages externes via vos paramètres personnels",
+    "Allow users to mount the following external storage" : "Autoriser les utilisateurs à monter les stockages externes suivants",
     "Are you sure you want to delete this external storage" : "Êtes-vous sûr de vouloir supprimer ce stockage externe ?"
 },"pluralForm" :"nplurals=2; plural=(n > 1);"
 }

@@ -39,6 +39,7 @@
 				 :srcset="generateAvatar(user.id, 64)+' 2x, '+generateAvatar(user.id, 128)+' 4x'"
 				 v-if="!loading.delete && !loading.disable">
 		</div>
+		<!-- dirty hack to ellipsis on two lines -->
 		<div class="name">{{user.id}}</div>
 		<form class="displayName" :class="{'icon-loading-small': loading.displayName}" v-on:submit.prevent="updateDisplayName">
 			<input :id="'displayName'+user.id+rand" type="text"
@@ -64,7 +65,7 @@
 			<input type="submit" class="icon-confirm" value="" />
 		</form>
 		<div class="groups" :class="{'icon-loading-small': loading.groups}">
-			<multiselect :value="userGroups" :options="groups" :disabled="loading.groups||loading.all"
+			<multiselect :value="userGroups" :options="availableGroups" :disabled="loading.groups||loading.all"
 						 tag-placeholder="create" :placeholder="t('settings', 'Add user in group')"
 						 label="name" track-by="id" class="multiselect-vue" :limit="2"
 						 :multiple="true" :taggable="settings.isAdmin" :closeOnSelect="false"
@@ -113,6 +114,10 @@
 					<popover-menu :menu="userActions" />
 				</div>
 			</div>
+			<div class="feedback" :style="{opacity: feedbackMessage !== '' ? 1 : 0}">
+				<div class="icon-checkmark"></div>
+				{{feedbackMessage}}
+			</div>
 		</div>
 		</div>
 </template>
@@ -145,6 +150,7 @@ export default {
 		return {
 			rand: parseInt(Math.random() * 1000),
 			openedMenu: false,
+			feedbackMessage: '',
 			loading: {
 				all: false,
 				displayName: false,
@@ -162,7 +168,7 @@ export default {
 	computed: {
 		/* USER POPOVERMENU ACTIONS */
 		userActions() {
-			return [{
+			let actions = [{
 				icon: 'icon-delete',
 				text: t('settings','Delete user'),
 				action: this.deleteUser
@@ -170,7 +176,15 @@ export default {
 				icon: this.user.enabled ? 'icon-close' : 'icon-add',
 				text: this.user.enabled ? t('settings','Disable user') : t('settings','Enable user'),
 				action: this.enableDisableUser
-			}]
+			}];
+			if (this.user.email !== null && this.user.email !== '') {
+				actions.push({
+					icon: 'icon-mail',
+					text: t('settings','Resend welcome email'),
+					action: this.sendWelcomeMail
+				})
+			}
+			return actions;
 		},
 
 		/* GROUPS MANAGEMENT */
@@ -181,6 +195,23 @@ export default {
 		userSubAdminsGroups() {
 			let userSubAdminsGroups = this.subAdminsGroups.filter(group => this.user.subadmin.includes(group.id));
 			return userSubAdminsGroups;
+		},
+		availableGroups() {
+			return this.groups.map((group) => {
+				// clone object because we don't want
+				// to edit the original groups
+				let groupClone = Object.assign({}, group);
+
+				// two settings here:
+				// 1. user NOT in group but no permission to add
+				// 2. user is in group but no permission to remove
+				groupClone.$isDisabled =
+					(group.canAdd === false &&
+						!this.user.groups.includes(group.id)) ||
+					(group.canRemove === false &&
+						this.user.groups.includes(group.id));
+				return groupClone;
+			});
 		},
 
 		/* QUOTA MANAGEMENT */
@@ -271,7 +302,7 @@ export default {
 			this.loading.delete = true;
 			this.loading.all = true;
 			let userid = this.user.id;
-			return this.$store.dispatch('deleteUser', {userid})
+			return this.$store.dispatch('deleteUser', userid)
 				.then(() => {
 					this.loading.delete = false
 					this.loading.all = false
@@ -374,6 +405,9 @@ export default {
 		 * @returns {Promise}
 		 */
 		addUserGroup(group) {
+			if (group.canAdd === false) {
+				return false;
+			}
 			this.loading.groups = true;
 			let userid = this.user.id;
 			let gid = group.id;
@@ -388,6 +422,9 @@ export default {
 		 * @returns {Promise}
 		 */
 		removeUserGroup(group) {
+			if (group.canRemove === false) {
+				return false;
+			}
 			this.loading.groups = true;
 			let userid = this.user.id;
 			let gid = group.id;
@@ -482,6 +519,24 @@ export default {
 				value: lang.code
 			}).then(() => this.loading.languages = false);
 			return lang;
+		},
+
+		/**
+		 * Dispatch new welcome mail request
+		 */
+		sendWelcomeMail() {
+			this.loading.all = true;
+			this.$store.dispatch('sendWelcomeMail', this.user.id)
+				.then(success => {
+					if (success) {
+						// Show feedback to indicate the success
+						this.feedbackMessage = t('setting', 'Welcome mail sent!');
+						setTimeout(() => {
+							this.feedbackMessage = '';
+						}, 2000);
+					}
+					this.loading.all = false;
+				});
 		}
 	}
 }

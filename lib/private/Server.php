@@ -174,6 +174,12 @@ class Server extends ServerContainer implements IServerContainer {
 		$this->registerAlias(\OCP\Calendar\IManager::class, \OC\Calendar\Manager::class);
 		$this->registerAlias('CalendarManager', \OC\Calendar\Manager::class);
 
+		$this->registerAlias(\OCP\Calendar\Resource\IManager::class, \OC\Calendar\Resource\Manager::class);
+		$this->registerAlias('CalendarResourceBackendManager', \OC\Calendar\Resource\Manager::class);
+
+		$this->registerAlias(\OCP\Calendar\Room\IManager::class, \OC\Calendar\Room\Manager::class);
+		$this->registerAlias('CalendarRoomBackendManager', \OC\Calendar\Room\Manager::class);
+
 		$this->registerAlias(\OCP\Contacts\IManager::class, \OC\ContactsManager::class);
 		$this->registerAlias('ContactsManager', \OCP\Contacts\IManager::class);
 
@@ -339,15 +345,7 @@ class Server extends ServerContainer implements IServerContainer {
 			$dbConnection = $c->getDatabaseConnection();
 			return new Authentication\Token\DefaultTokenMapper($dbConnection);
 		});
-		$this->registerService(Authentication\Token\DefaultTokenProvider::class, function (Server $c) {
-			$mapper = $c->query(Authentication\Token\DefaultTokenMapper::class);
-			$crypto = $c->getCrypto();
-			$config = $c->getConfig();
-			$logger = $c->getLogger();
-			$timeFactory = new TimeFactory();
-			return new \OC\Authentication\Token\DefaultTokenProvider($mapper, $crypto, $config, $logger, $timeFactory);
-		});
-		$this->registerAlias(IProvider::class, Authentication\Token\DefaultTokenProvider::class);
+		$this->registerAlias(IProvider::class, Authentication\Token\Manager::class);
 
 		$this->registerService(\OCP\IUserSession::class, function (Server $c) {
 			$manager = $c->getUserManager();
@@ -420,18 +418,7 @@ class Server extends ServerContainer implements IServerContainer {
 		});
 		$this->registerAlias('UserSession', \OCP\IUserSession::class);
 
-		$this->registerService(\OC\Authentication\TwoFactorAuth\Manager::class, function (Server $c) {
-			return new \OC\Authentication\TwoFactorAuth\Manager(
-				$c->getAppManager(),
-				$c->getSession(),
-				$c->getConfig(),
-				$c->getActivityManager(),
-				$c->getLogger(),
-				$c->query(IProvider::class),
-				$c->query(ITimeFactory::class),
-				$c->query(EventDispatcherInterface::class)
-			);
-		});
+		$this->registerAlias(\OCP\Authentication\TwoFactorAuth\IRegistry::class, \OC\Authentication\TwoFactorAuth\Registry::class);
 
 		$this->registerAlias(\OCP\INavigationManager::class, \OC\NavigationManager::class);
 		$this->registerAlias('NavigationManager', \OCP\INavigationManager::class);
@@ -954,7 +941,7 @@ class Server extends ServerContainer implements IServerContainer {
 					$c->getURLGenerator(),
 					$c->getMemCacheFactory(),
 					new Util($c->getConfig(), $this->getAppManager(), $c->getAppDataDir('theming')),
-					new ImageManager($c->getConfig(), $c->getAppDataDir('theming'), $c->getURLGenerator()),
+					new ImageManager($c->getConfig(), $c->getAppDataDir('theming'), $c->getURLGenerator(), $this->getMemCacheFactory(), $this->getLogger()),
 					$c->getAppManager()
 				);
 			}
@@ -1180,6 +1167,20 @@ class Server extends ServerContainer implements IServerContainer {
 	 */
 	public function getCalendarManager() {
 		return $this->query('CalendarManager');
+	}
+
+	/**
+	 * @return \OCP\Calendar\Resource\IManager
+	 */
+	public function getCalendarResourceBackendManager() {
+		return $this->query('CalendarResourceBackendManager');
+	}
+
+	/**
+	 * @return \OCP\Calendar\Room\IManager
+	 */
+	public function getCalendarRoomBackendManager() {
+		return $this->query('CalendarRoomBackendManager');
 	}
 
 	private function connectDispatcher() {

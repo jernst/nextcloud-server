@@ -105,7 +105,7 @@ abstract class AUserData extends OCSController {
 		$groups = $this->groupManager->getUserGroups($targetUserObject);
 		$gids = [];
 		foreach ($groups as $group) {
-			$gids[] = $group->getDisplayName();
+			$gids[] = $group->getGID();
 		}
 
 		// Find the data
@@ -123,6 +123,7 @@ abstract class AUserData extends OCSController {
 		$data[AccountManager::PROPERTY_TWITTER] = $userAccount[AccountManager::PROPERTY_TWITTER]['value'];
 		$data['groups'] = $gids;
 		$data['language'] = $this->config->getUserValue($targetUserObject->getUID(), 'core', 'lang');
+		$data['locale'] = $this->config->getUserValue($targetUserObject->getUID(), 'core', 'locale');
 
 		return $data;
     }

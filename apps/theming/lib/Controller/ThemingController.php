@@ -201,14 +201,14 @@ class ThemingController extends Controller {
 		$this->themingDefaults->set($setting, $value);
 
 		// reprocess server scss for preview
-		$cssCached = $this->scssCacher->process(\OC::$SERVERROOT, 'core/css/server.scss', 'core');
+		$cssCached = $this->scssCacher->process(\OC::$SERVERROOT, 'core/css/css-variables.scss', 'core');
 
 		return new DataResponse(
 			[
 				'data' =>
 					[
 						'message' => $this->l10n->t('Saved'),
-						'serverCssUrl' => $this->urlGenerator->linkTo('', $this->scssCacher->getCachedSCSS('core', '/core/css/server.scss'))
+						'serverCssUrl' => $this->urlGenerator->linkTo('', $this->scssCacher->getCachedSCSS('core', '/core/css/css-variables.scss'))
 					],
 				'status' => 'success'
 			]
@@ -262,6 +262,8 @@ class ThemingController extends Controller {
 			$folder = $this->appData->newFolder('images');
 		}
 
+		$this->imageManager->delete($key);
+
 		$target = $folder->newFile($key);
 		$supportedFormats = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/svg'];
 		$detectedMimeType = mime_content_type($image['tmp_name']);
@@ -300,7 +302,7 @@ class ThemingController extends Controller {
 
 		$this->themingDefaults->set($key.'Mime', $image['type']);
 
-		$cssCached = $this->scssCacher->process(\OC::$SERVERROOT, 'core/css/server.scss', 'core');
+		$cssCached = $this->scssCacher->process(\OC::$SERVERROOT, 'core/css/css-variables.scss', 'core');
 
 		return new DataResponse(
 			[
@@ -309,7 +311,7 @@ class ThemingController extends Controller {
 						'name' => $name,
 						'url' => $this->imageManager->getImageUrl($key),
 						'message' => $this->l10n->t('Saved'),
-						'serverCssUrl' => $this->urlGenerator->linkTo('', $this->scssCacher->getCachedSCSS('core', '/core/css/server.scss'))
+						'serverCssUrl' => $this->urlGenerator->linkTo('', $this->scssCacher->getCachedSCSS('core', '/core/css/css-variables.scss'))
 					],
 				'status' => 'success'
 			]
@@ -326,7 +328,7 @@ class ThemingController extends Controller {
 	public function undo(string $setting): DataResponse {
 		$value = $this->themingDefaults->undo($setting);
 		// reprocess server scss for preview
-		$cssCached = $this->scssCacher->process(\OC::$SERVERROOT, 'core/css/server.scss', 'core');
+		$cssCached = $this->scssCacher->process(\OC::$SERVERROOT, 'core/css/css-variables.scss', 'core');
 
 		if (strpos($setting, 'Mime') !== -1) {
 			$imageKey = str_replace('Mime', '', $setting);
@@ -339,7 +341,7 @@ class ThemingController extends Controller {
 					[
 						'value' => $value,
 						'message' => $this->l10n->t('Saved'),
-						'serverCssUrl' => $this->urlGenerator->linkTo('', $this->scssCacher->getCachedSCSS('core', '/core/css/server.scss'))
+						'serverCssUrl' => $this->urlGenerator->linkTo('', $this->scssCacher->getCachedSCSS('core', '/core/css/css-variables.scss'))
 					],
 				'status' => 'success'
 			]
@@ -351,12 +353,13 @@ class ThemingController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @param string $key
+	 * @param bool $useSvg
 	 * @return FileDisplayResponse|NotFoundResponse
-	 * @throws \Exception
+	 * @throws NotPermittedException
 	 */
-	public function getImage(string $key) {
+	public function getImage(string $key, bool $useSvg = true) {
 		try {
-			$file = $this->imageManager->getImage($key);
+			$file = $this->imageManager->getImage($key, $useSvg);
 		} catch (NotFoundException $e) {
 			return new NotFoundResponse();
 		}
@@ -365,6 +368,11 @@ class ThemingController extends Controller {
 		$response->cacheFor(3600);
 		$response->addHeader('Content-Type', $this->config->getAppValue($this->appName, $key . 'Mime', ''));
 		$response->addHeader('Content-Disposition', 'attachment; filename="' . $key . '"');
+		if (!$useSvg) {
+			$response->addHeader('Content-Type', 'image/png');
+		} else {
+			$response->addHeader('Content-Type', $this->config->getAppValue($this->appName, $key . 'Mime', ''));
+		}
 		return $response;
 	}
 

@@ -1,8 +1,11 @@
 OC.L10N.register(
     "settings",
     {
-    "Email" : "E-bost",
+    "Authentication error" : "Gwall dilysu",
+    "Email sent" : "Anfonwyd yr e-bost",
     "Delete" : "Dileu",
+    "Groups" : "Grwpiau",
+    "Email" : "E-bost",
     "None" : "Dim",
     "Login" : "Mewngofnodi",
     "Encryption" : "Amgryptiad",
@@ -10,9 +13,6 @@ OC.L10N.register(
     "Password" : "Cyfrinair",
     "New password" : "Cyfrinair newydd",
     "Username" : "Enw defnyddiwr",
-    "Authentication error" : "Gwall dilysu",
-    "Email sent" : "Anfonwyd yr e-bost",
-    "Groups" : "Grwpiau",
     "undo" : "dadwneud",
     "never" : "byth",
     "Other" : "Arall"
